@@ -16,6 +16,8 @@ MARGIN = 42
 ROW_HEIGHT = 58
 COL_WIDTHS = (380, 180, 380, 876)
 COL_HEADERS = ("IP", "端口", "代理后 IP", "代理后属地")
+FOREIGN_ROW_COLOR = "#C0FF02"
+SINGAPORE_ROW_COLOR = "#FFCE46"
 
 
 def get_font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
@@ -56,6 +58,25 @@ def sorted_results(results: list[ProxyRecord]) -> list[ProxyRecord]:
         return numeric, item.port
 
     return sorted(results, key=ip_key)
+
+
+def location_row_color(location: str) -> str | None:
+    """新加坡优先高亮；其他非中国属地使用绿色。"""
+    normalized = str(location or "").strip()
+    if not normalized or normalized in {
+        "未知属地",
+        "无法探测代理后地址",
+        "未探测代理后地址",
+    }:
+        return None
+    if "新加坡" in normalized or "Singapore" in normalized:
+        return SINGAPORE_ROW_COLOR
+    if any(
+        keyword in normalized
+        for keyword in ("中国", "香港", "台湾", "澳门")
+    ):
+        return None
+    return FOREIGN_ROW_COLOR
 
 
 def render_cache_image(state: CacheState) -> bytes:
@@ -182,7 +203,17 @@ def render_cache_image(state: CacheState) -> bytes:
 
     for row_index, values in enumerate(row_values, start=1):
         top = table_top + row_index * ROW_HEIGHT
-        if row_index % 2 == 0:
+        row_color = None
+        if visible:
+            row_color = location_row_color(
+                visible[row_index - 1].location
+            )
+        if row_color is not None:
+            draw.rectangle(
+                (table_left, top, table_right, top + ROW_HEIGHT),
+                fill=row_color,
+            )
+        elif row_index % 2 == 0:
             draw.rectangle(
                 (table_left, top, table_right, top + ROW_HEIGHT),
                 fill="#f8fafc",

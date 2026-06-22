@@ -8,7 +8,7 @@ class PluginConfig(BaseModel):
     proxy_probe_local_ip: str = ""
     proxy_probe_target_ip: str = ""
     proxy_probe_prefix_length: int = 20
-    proxy_probe_ports: list[int] = Field(default_factory=lambda: [7897])
+    proxy_probe_ports: list[int] = Field(default_factory=lambda: [7897,7890])
     proxy_probe_connect_timeout: float = 0.35
     proxy_probe_proxy_timeout: float = 5.0
     proxy_probe_geo_timeout: float = 5.0
