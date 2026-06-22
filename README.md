@@ -1,3 +1,4 @@
+
 # nonebot-plugin-proxy-probe
 
 NoneBot2 / OneBot V11 插件。扫描目标 `/20` 网段中的 Clash HTTP 代理，
@@ -82,3 +83,20 @@ LocalStore 值。
 
 重新扫描同时完成代理与属地刷新，因此扫描结束或停止保存部分结果时，
 扫描时间和刷新时间会同时更新。
+
+## 示例
+/proxy
+
+<img width="486" height="503" alt="image" src="https://github.com/user-attachments/assets/d4d4f917-8c16-4a28-8714-da5e30759c01" />
+<img width="1280" height="1378" alt="9f18b5b6a109f4006e2c07c471f7b1ac_720" src="https://github.com/user-attachments/assets/fe7af0c4-e7cf-4f0c-bcb8-a9181d12b2d2" />
+
+/proxy -h
+
+<img width="520" height="329" alt="image" src="https://github.com/user-attachments/assets/ce9804da-3c93-4667-9450-48fb7e6d64c9" />
+
+/proxy -r
+
+<img width="444" height="533" alt="image" src="https://github.com/user-attachments/assets/c3888e1a-8fbc-4fcb-b8ea-544c3ed461cc" />
+<img width="1900" height="1988" alt="eb7f49af714297d1d3157251f6627bd3" src="https://github.com/user-attachments/assets/aae2675d-9da3-423d-a707-c6f78023048e" />
+
+
