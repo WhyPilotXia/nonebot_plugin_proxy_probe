@@ -11,11 +11,11 @@ from .models import CacheState, ProxyRecord
 
 FONT_PATH = Path(__file__).resolve().parent / "assets" / "原神字体.ttf"
 MAX_DISPLAY_RESULTS = 50
-IMAGE_WIDTH = 1900
+IMAGE_WIDTH = 2010
 MARGIN = 42
 ROW_HEIGHT = 58
-COL_WIDTHS = (380, 180, 380, 876)
-COL_HEADERS = ("IP", "端口", "代理后 IP", "代理后属地")
+COL_WIDTHS = (110, 380, 180, 380, 876)
+COL_HEADERS = ("编号", "IP", "端口", "代理后 IP", "代理后属地")
 FOREIGN_ROW_COLOR = "#C0FF02"
 SINGAPORE_ROW_COLOR = "#FFCE46"
 
@@ -195,11 +195,17 @@ def render_cache_image(state: CacheState) -> bytes:
 
     if visible:
         row_values = [
-            (item.ip, str(item.port), item.public_ip, item.location)
-            for item in visible
+            (
+                str(index),
+                item.ip,
+                str(item.port),
+                item.public_ip,
+                item.location,
+            )
+            for index, item in enumerate(visible, start=1)
         ]
     else:
-        row_values = [("暂无缓存代理", "", "", "")]
+        row_values = [("", "暂无缓存代理", "", "", "")]
 
     for row_index, values in enumerate(row_values, start=1):
         top = table_top + row_index * ROW_HEIGHT

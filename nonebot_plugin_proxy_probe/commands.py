@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import ipaddress
 
-from nonebot import on_command
+from nonebot import get_driver, on_command
 from nonebot.adapters.onebot.v11 import (
     Bot,
     GroupMessageEvent,
@@ -22,7 +22,8 @@ USAGE = (
     "/proxy -i <IPv4> 或 --ip <IPv4> 设置目标参考 IP\n"
     "/proxy -p 或 --probe 重新扫描\n"
     "/proxy -r 或 --refresh 刷新缓存\n"
-    "/proxy -s 或 --stop 停止后台任务"
+    "/proxy -c 或 --cancel 停止后台任务\n"
+    "/proxy -s <编号> 或 --set <编号> 设置当前进程代理"
 )
 
 
@@ -36,8 +37,8 @@ def parse_command(argument: str) -> tuple[str, str] | None:
         "--probe": ("probe", ""),
         "-r": ("refresh", ""),
         "--refresh": ("refresh", ""),
-        "-s": ("stop", ""),
-        "--stop": ("stop", ""),
+        "-c": ("stop", ""),
+        "--cancel": ("stop", ""),
     }
     exact = actions.get(normalized)
     if exact is not None:
@@ -45,9 +46,13 @@ def parse_command(argument: str) -> tuple[str, str] | None:
 
     if normalized.startswith("--ip="):
         return "ip", normalized.partition("=")[2].strip()
+    if normalized.startswith("--set="):
+        return "set", normalized.partition("=")[2].strip()
     fields = normalized.split(" ", 1)
     if fields[0] in {"-i", "--ip"}:
         return "ip", fields[1].strip() if len(fields) == 2 else ""
+    if fields[0] in {"-s", "--set"}:
+        return "set", fields[1].strip() if len(fields) == 2 else ""
     return None
 
 
@@ -74,6 +79,10 @@ async def set_emoji(
         )
     except Exception as exc:
         logger.warning(f"设置消息表情失败: {exc}")
+
+
+def is_superuser(event: MessageEvent) -> bool:
+    return event.get_user_id() in get_driver().config.superusers
 
 
 proxy_command = on_command("proxy", priority=5, block=True)
@@ -107,6 +116,20 @@ async def handle_proxy(
         except ValueError:
             await proxy_command.finish(f"不是有效的 IPv4 地址：{value}")
         saved, message = await manager.set_target_ip(target_ip)
+        await proxy_command.finish(message)
+
+    if action == "set":
+        if not is_superuser(event):
+            await proxy_command.finish("只有超级用户可以切换当前进程代理。")
+        if not value:
+            await proxy_command.finish("请提供代理编号，例如：/proxy -s 4")
+        try:
+            proxy_index = int(value)
+        except ValueError:
+            await proxy_command.finish(f"代理编号必须是正整数：{value}")
+        if proxy_index <= 0:
+            await proxy_command.finish(f"代理编号必须是正整数：{value}")
+        saved, message = manager.set_process_proxy(proxy_index)
         await proxy_command.finish(message)
 
     if action == "probe":

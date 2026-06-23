@@ -16,7 +16,8 @@ __plugin_meta__ = PluginMetadata(
         "/proxy -i <IPv4> 或 --ip <IPv4> 设置目标参考 IP\n"
         "/proxy -p 或 --probe 重新扫描\n"
         "/proxy -r 或 --refresh 刷新缓存\n"
-        "/proxy -s 或 --stop 停止后台任务"
+        "/proxy -c 或 --cancel 停止后台任务\n"
+        "/proxy -s <编号> 或 --set <编号> 设置当前进程代理"
     ),
     type="application",
     homepage="https://github.com/WhyPilotXia/nonebot-plugin-proxy-probe",

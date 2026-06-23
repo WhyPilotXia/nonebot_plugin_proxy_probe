@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import os
 import threading
 import time
 from datetime import datetime
@@ -27,7 +28,12 @@ from .probe import (
     run_probe,
     run_refresh,
 )
-from .render import image_to_base64, render_cache_image
+from .render import (
+    MAX_DISPLAY_RESULTS,
+    image_to_base64,
+    render_cache_image,
+    sorted_results,
+)
 
 
 def format_time() -> str:
@@ -121,7 +127,7 @@ class ProbeManager:
                 return (
                     False,
                     f"已有{self.running_description()}任务正在运行，"
-                    "请先使用 /proxy -s 停止。",
+                    "请先使用 /proxy -c 停止。",
                 )
             try:
                 await asyncio.to_thread(save_target_ip, target_ip)
@@ -133,6 +139,37 @@ class ProbeManager:
                 f"目标参考 IP 已持久化为 {target_ip}，"
                 "后续扫描和刷新将优先使用该值。",
             )
+
+    def set_process_proxy(self, index: int) -> tuple[bool, str]:
+        with self._state_lock:
+            visible = sorted_results(self._state.results)[:MAX_DISPLAY_RESULTS]
+
+        if not visible:
+            return False, "当前没有缓存代理，请先使用 /proxy -p 扫描。"
+        if index < 1 or index > len(visible):
+            return (
+                False,
+                f"代理编号超出范围：{index}。"
+                f"当前图片可选编号为 1-{len(visible)}。",
+            )
+
+        selected = visible[index - 1]
+        proxy_url = f"http://{selected.ip}:{selected.port}"
+        for key in (
+            "HTTP_PROXY",
+            "HTTPS_PROXY",
+            "ALL_PROXY",
+            "http_proxy",
+            "https_proxy",
+            "all_proxy",
+        ):
+            os.environ[key] = proxy_url
+        return (
+            True,
+            f"已将当前进程代理设置为第 {index} 个：{proxy_url}\n"
+            "这会影响当前 Bot 进程中后续读取环境变量的网络请求；"
+            "已创建且不读取环境变量的客户端可能不会立即生效。",
+        )
 
     def _persist(self, force: bool = False) -> None:
         with self._persist_lock:
@@ -193,7 +230,7 @@ class ProbeManager:
                 return (
                     False,
                     f"已有{self.running_description()}任务正在运行，"
-                    "可使用 /proxy -s 停止。",
+                    "可使用 /proxy -c 停止。",
                 )
             if operation == "refresh" and not self.get_state().results:
                 return False, "当前没有缓存代理，请先使用 /proxy -p 扫描。"
